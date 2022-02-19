@@ -3,13 +3,22 @@ const jwt = require('express-jwt');
 const jsonwebtoken = require('jsonwebtoken');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+const csurf = require('csurf');
 
 const app = express();
+const csurfProtection = csurf({
+  cookie: true,
+});
 
 app.use(cors());
 app.use(cookieParser());
+app.use(csurfProtection);
 
 const jwtSecret = 'secret123';
+
+app.get('/csrf-token', (req, res) => {
+  res.json({ csrfToken: req.csrfToken() });
+});
 
 app.get('/jwt', (req, res) => {
   const token = jsonwebtoken.sign({ user: 'johndoe' }, jwtSecret);
@@ -34,6 +43,17 @@ const foods = [
 
 app.get('/foods', (req, res) => {
   res.json(foods);
+});
+
+app.post('/foods', (req, res) => {
+  foods.push({
+    id: foods.length + 1,
+    description: 'Baklava',
+  });
+  res.json({
+    newFood: foods,
+    message: 'Food created!',
+  });
 });
 
 app.listen(5000, () => {
